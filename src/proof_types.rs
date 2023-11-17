@@ -1,5 +1,5 @@
 use ethereum_types::H256;
-use plonky2_evm::proof::{ExtraBlockData, TrieRoots};
+use plonky2_evm::proof::{ExtraBlockData, PublicValues, TrieRoots};
 use proof_protocol_decoder::proof_gen_types::ProofBeforeAndAfterDeltas;
 use serde::{Deserialize, Serialize};
 
@@ -35,6 +35,7 @@ pub struct GeneratedTxnProof {
     pub txn_idx: TxnIdx,
     pub common: ProofCommon,
     pub intern: PlonkyProofIntern,
+    pub public_values: PublicValues,
 }
 
 impl GeneratedTxnProof {
@@ -48,12 +49,14 @@ pub struct GeneratedAggProof {
     pub underlying_txns: ProofUnderlyingTxns,
     pub common: ProofCommon,
     pub intern: PlonkyProofIntern,
+    pub public_values: PublicValues,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct GeneratedBlockProof {
     pub b_height: BlockHeight,
     pub intern: PlonkyProofIntern,
+    pub public_values: PublicValues,
 }
 
 /// Sometimes we don't care about the underlying proof type and instead only if
@@ -77,6 +80,27 @@ impl AggregatableProof {
         match self {
             AggregatableProof::Txn(info) => info.common.b_height,
             AggregatableProof::Agg(info) => info.common.b_height,
+        }
+    }
+
+    pub fn is_agg(&self) -> bool {
+        match self {
+            AggregatableProof::Txn(_) => false,
+            AggregatableProof::Agg(_) => true,
+        }
+    }
+
+    pub fn intern(&self) -> PlonkyProofIntern {
+        match self {
+            AggregatableProof::Txn(info) => info.intern.clone(),
+            AggregatableProof::Agg(info) => info.intern.clone(),
+        }
+    }
+
+    pub fn public_values(&self) -> PublicValues {
+        match self {
+            AggregatableProof::Txn(info) => info.public_values.clone(),
+            AggregatableProof::Agg(info) => info.public_values.clone(),
         }
     }
 }
